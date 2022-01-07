@@ -1,0 +1,74 @@
+from selenium import webdriver
+import time
+import os
+import requests
+def vip_mp3():
+    i = 1
+    while i <= 2:
+        path='D:\\下载的MP3'
+        folder = os.path.exists(path)
+        if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
+            os.makedirs(path)  # makedirs 创建文件时如果路径不存在会创建这个路径
+            print('监测到无D:\\下载的MP3 文件夹 正在新建中...')
+            print('创建成功')
+        else:
+            print('已监测到有配置文件夹 正在执行...')
+        #输入需要下载的歌曲名字
+        musician = input('请输入歌曲的名字后按下回车（别当小可爱输入一些奇奇怪怪的符号）:')
+        #受害网站的url
+        url = 'http://tool.liumingye.cn/music/?page=homePage'
+        opt = webdriver.ChromeOptions()
+        opt.add_argument('--headless')  # 配置对象添加开启无界面模式的命令
+        opt.add_argument('--disable-gpu')  # 配置对象添加禁用gpu的命令
+        #打开谷歌浏览器
+        driver = webdriver.Chrome(options=opt)
+        #请求受害网址
+        driver.get(url)
+        #浏览器窗口最大化
+        driver.maximize_window()
+        print('-----------------------------------正在搜索请骚等....-----------------------------------')
+        #输入歌曲名字
+        driver.find_element_by_xpath('//*[@id="input"]').send_keys(musician)
+        #点击搜索
+        driver.find_element_by_xpath('//*[@id="search"]/div[2]/div/button[2]/i').click()
+        #暂停（最jb拉跨的暂停方式）
+        time.sleep(3)
+        #获取歌曲名字 为保存文件做准备
+        name = driver.find_element_by_xpath('//*[@id="player"]/div[1]/ol/li[1]/span[4]').text
+        #获取歌手名字
+        name1 =driver.find_element_by_xpath('//*[@id="player"]/div[1]/ol/li[1]/span[5]').text
+        print('-----------------------------------你就说是不是你现在听到的歌曲吧-----------------------------------')
+        #拼接歌曲名字和歌手名
+        print(name+'-'+name1)
+        names = name+'-'+name1
+        #输入的歌曲名字是否包含在搜索的歌曲名中 （返回的是索引）
+        # aaa = musician.find(name)
+        aaa = name.find(musician)
+        #如果不包含返回的是-1 就说明搜索到的歌曲包含输入的歌名 那么就可以进行下载操作
+        if aaa != -1 :
+            #点开下载按钮
+            driver.find_element_by_xpath('//*[@id="player"]/div[1]/ol/li[1]/span[1]').click()
+            #获取MP3文件地址
+            url1= driver.find_element_by_xpath('//*[@id="m-download"]/div/div/div[2]/div[5]/div[2]/a[1]').get_attribute('href')
+            print(url1)
+            time.sleep(3)
+            #关闭点击出来的窗口
+            driver.find_element_by_xpath('//*[@id="m-download"]/div/div/div[1]/button').click()
+            time.sleep(2)
+            print('-----------------------------------正在请求中...-----------------------------------')
+            #请求获取的MP3地址 进行content解析
+            req = requests.get(url1).content
+            print('-----------------------------------正在下载...-----------------------------------')
+            #创建文件 路径 写入二进制 别名为f
+            with open (path+'\\'+names+'.mp3','wb')as f:
+                #写入 请求的结果
+                f.write(req)
+                print('-----------------------------------'+names,'下载完毕(请在D:\下载MP3文件夹里查看)-----------------------------------')
+                driver.close()
+        #否则就是没找到歌曲
+        else:
+            print('-----------------------------------没找到',musician,'这首歌请输入正确歌名（老子怀疑你在乱输入）-----------------------------------')
+            driver.close()
+
+if __name__ == '__main__':
+    vip_mp3()
